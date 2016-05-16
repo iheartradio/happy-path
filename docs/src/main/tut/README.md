@@ -17,14 +17,9 @@ is the successful result `T` and the `Left` side is a `Reason` explaining why th
 
 To use `FutureEither`, it's recommended to use the wildcard import,
 
-```scala
-scala> import com.iheart.happy.path._
+```tut
 import com.iheart.happy.path._
-
-scala> import com.iheart.happy.path.FutureEither._
 import com.iheart.happy.path.FutureEither._
-
-scala> import concurrent.Future
 import concurrent.Future
 ```
 
@@ -32,49 +27,37 @@ This provides all the instances needed for things such as `map`/`flatMap`
 (otherwise you might see various `could not find implicit value` compilation errors).
 
 Once imported, you can use various helpers:
-```scala
-scala> import scala.util.Success
+```tut
 import scala.util.Success
 
-scala> // The expressions below each yield a `FutureEither[Int]` containing a `Right(1)`
-     | val f1 = right(1)
-f1: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
+// The expressions below each yield a `FutureEither[Int]` containing a `Right(1)`
+val f1 = right(1)
+val f2 = ofFuture(Future.successful(1))
+val f3 = ofTry(Success(1))
+val f4 = ofOption(Some(1))
+val f5 = ofFutureOption(Future.successful(Some(1)))
 
-scala> val f2 = ofFuture(Future.successful(1))
-f2: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
-
-scala> val f3 = ofTry(Success(1))
-f3: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
-
-scala> val f4 = ofOption(Some(1))
-f4: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
-
-scala> val f5 = ofFutureOption(Future.successful(Some(1)))
-f5: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
-
-scala> // If we wanted to add some of these futures together:
-     | val f123 = for {
-     |   v1 <- f1
-     |   v2 <- f2
-     |   v3 <- f3
-     | } yield v1 + v2 + v3
-f123: cats.data.XorT[scala.concurrent.Future,com.iheart.happy.path.Reason,Int] = XorT(List())
+// If we wanted to add some of these futures together:
+val f123 = for {
+  v1 <- f1
+  v2 <- f2
+  v3 <- f3
+} yield v1 + v2 + v3
 ```
 
 `f123` is a `FutureEither[Int]` containing the results of `f1`, `f2`, `f3` added together (3).
 
 Now let's say somewhere we encounter a failure:
 
-```scala
-scala> val failedF: FutureEither[Int] = left(RegularReason("Something happened"))
-failedF: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
+```tut
 
-scala> val f45 = for {
-     |   v4 <- f4
-     |   failed <- failedF
-     |   v5 <- f5
-     | } yield v4 + v5
-f45: cats.data.XorT[scala.concurrent.Future,com.iheart.happy.path.Reason,Int] = XorT(List())
+val failedF: FutureEither[Int] = left(RegularReason("Something happened"))
+
+val f45 = for {
+  v4 <- f4
+  failed <- failedF
+  v5 <- f5
+} yield v4 + v5
 ```
 
 The result of `f45` is a failed `FutureEither[Int]` containing a `Left[RegularReason[String]]`.
@@ -90,12 +73,9 @@ client, or matched to figure out how to recover from it. Poweramp defines the fo
 ### `ExceptionReason`
 When the underlying `Future` fails because of an exception:
 
-```scala
-scala> val failedF = Future.failed(new RuntimeException("Something happened"))
-failedF: scala.concurrent.Future[Nothing] = scala.concurrent.impl.Promise$KeptPromise@1ac6924a
-
-scala> val failedFE = ofFuture(failedF)
-failedFE: com.iheart.happy.path.FutureEither.FutureEither[Nothing] = XorT(List())
+```tut
+val failedF = Future.failed(new RuntimeException("Something happened"))
+val failedFE = ofFuture(failedF)
 ```
 
 In the above example, `failedFE` is a `FutureEither` containing a `Left[ExceptionReason[RuntimeException]]`.
@@ -111,24 +91,14 @@ we use `OptionalItemNotFound` to propagate the error as a 404.
 Otherwise, if it's an internal error (some essential resource that we expect to exist,
 but doesn't), we use `ItemNotFound`, which will propagate as a 500 error.
 
-```scala
-scala> val opt: Option[Int] = None
-opt: Option[Int] = None
+```tut
+val opt: Option[Int] = None
+val optFE1 = ofOptional(opt)
+val optFE2 = ofOption(opt)
 
-scala> val optFE1 = ofOptional(opt)
-optFE1: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
-
-scala> val optFE2 = ofOption(opt)
-optFE2: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(Success(Left(ItemNotFound(None))))
-
-scala> val optF = Future.successful(opt)
-optF: scala.concurrent.Future[Option[Int]] = scala.concurrent.impl.Promise$KeptPromise@65382169
-
-scala> val optFE3 = ofFutureOptional(optF, OptionalItemNotFound("This thing not found"))
-optFE3: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
-
-scala> val optFE4 = ofFutureOption(optF)
-optFE4: com.iheart.happy.path.FutureEither.FutureEither[Int] = XorT(List())
+val optF = Future.successful(opt)
+val optFE3 = ofFutureOptional(optF, OptionalItemNotFound("This thing not found"))
+val optFE4 = ofFutureOption(optF)
 ```
 
 In the above example, `optFE1` and `optFE3` are equivalent, and both contain a `Left[OptionalItemNotFound]`.
