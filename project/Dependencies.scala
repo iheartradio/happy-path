@@ -3,14 +3,14 @@ import sbt._
 
 object Dependencies {
   object Versions {
-    val specs2 = "3.7.3"
+    val specs2 = "3.6.2"
   }
-
 
   val cats = Seq("org.typelevel" %% "cats" % "0.5.0")
 
   val test = Seq(
-    "org.specs2" %% "specs2-core" % Versions.specs2 % "test"
+    "org.specs2" %% "specs2-core" % Versions.specs2 % "test",
+    "org.specs2" %% "specs2-scalacheck" % Versions.specs2 % "test"
   )
 
   val commonSettings = Seq(

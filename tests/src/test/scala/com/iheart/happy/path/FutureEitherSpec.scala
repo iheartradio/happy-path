@@ -334,12 +334,10 @@ class FutureEitherSpec extends Specification with ExecutionEnvironment with Disc
   "satisfies cats.laws.MonadFilterLaws" >> {
     import algebra.Eq
     import cats.Monad
-    import cats.functor.Invariant
     import cats.laws.discipline.CartesianTests.Isomorphisms
     import cats.laws.discipline.MonadFilterTests
-    import cats.std.all._
     import org.scalacheck.{Arbitrary, Gen}
-    import org.scalacheck.Arbitrary._
+    import cats.std.all._
 
     implicit val timeout: Duration = 1.second
 
@@ -347,12 +345,6 @@ class FutureEitherSpec extends Specification with ExecutionEnvironment with Disc
     implicit def futureEitherEq[T](implicit timeout: Duration) = new Eq[FutureEither[T]] {
       def eqv(fx: FutureEither[T], fy: FutureEither[T]): Boolean =
         Await.result(fx.toEither, timeout) == Await.result(fy.toEither, timeout)
-    }
-
-    // Check that two `Tuple3`s are equal
-    implicit def tuple3Eq[A: Eq, B: Eq, C: Eq] = new Eq[(A, B, C)] {
-      def eqv(x: (A, B, C), y: (A, B, C)): Boolean =
-        Eq.eqv(x._1, y._1) && Eq.eqv(x._2, y._2) && Eq.eqv(x._3, y._3)
     }
 
     // Arbitrary FutureEither generator. The Left case is the `empty` used for MonadFilter.
