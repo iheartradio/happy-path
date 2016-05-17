@@ -1,6 +1,7 @@
 package com.iheart.happy.path
 
-import com.iheart.happy.path.FutureEither._
+import cats.MonadFilter
+import com.iheart.happy.path._, FutureEither._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mutable.Specification
 import org.specs2.specification.mutable.ExecutionEnvironment
@@ -353,7 +354,7 @@ class FutureEitherSpec extends Specification with ExecutionEnvironment with Disc
     implicit def futureEitherArbitrary[T: Arbitrary]: Arbitrary[FutureEither[T]] = Arbitrary {
       implicitly[Arbitrary[T]].arbitrary.flatMap { t: T ⇒
         Gen.oneOf(
-          FutureEither.monadFilter.empty: FutureEither[T],
+          MonadFilter[FutureEither].empty: FutureEither[T],
           FutureEither.right(t)
         )
       }

@@ -7,11 +7,14 @@ import cats.syntax.{MonadFilterSyntax, TraverseSyntax}
 import scala.concurrent.{Future, ExecutionContext}
 import scala.util.{Success, Failure, Try}
 
-object FutureEither extends FutureEitherSyntax {
-  type FutureEither[T] = XorT[Future, Reason, T]
+object FutureEitherSyntax extends FutureEitherSyntax {
   type EitherOrReason[T] = Either[Reason, T]
+}
 
+/** Convenient syntax mixin to avoid the need to import cats.syntax._ */
+trait FutureEitherSyntax extends TraverseSyntax with MonadFilterSyntax {
   import ExecutionContext.Implicits.global // TODO: make this controllable by the client
+
   // futureMonad to allow `for` comprehensions on FutureEither by importing FutureEither._
   implicit val futureMonad: Monad[Future] = cats.std.future.futureInstance
 
@@ -33,12 +36,53 @@ object FutureEither extends FutureEitherSyntax {
     def combine(x: Reason, y: Reason): Reason = x
   }
 
+  implicit class FutureEitherOps[T](val self: FutureEither[T]) {
+    import FutureEither._
+    def toTry: Future[Try[T]] = self.toEither.map(eitherReasonToTry)
+    def toFuture: Future[T] = self.toTry.map(_.get)
+
+    def recoverLeft(
+      pf: PartialFunction[Reason, T]
+    ): FutureEither[T] = self.toEither.map {
+      case Left(reason) if pf.isDefinedAt(reason) ⇒ Right[Reason, T](pf(reason))
+      case other                                  ⇒ other
+    }
+
+    def recoverLeftWith(
+      pf: PartialFunction[Reason, FutureEither[T]]
+    ): FutureEither[T] = ofFuture(self.toEither).flatMap {
+      case Left(reason) if pf.isDefinedAt(reason) ⇒ pf(reason)
+      case other                                  ⇒ Future.successful(other)
+    }
+
+    def ensureF(onLeft: T ⇒ Reason)(f: T ⇒ Boolean): FutureEither[T] =
+      self.flatMap { t: T ⇒
+        if (f(t)) right(t) else left(onLeft(t))
+      }
+
+    def withFilter(p: T ⇒ Boolean): FutureEither[T] = self.filter(p)
+  }
+
+  implicit class FutureEitherOptionOps[T](val self: FutureEither[Option[T]]) {
+    import FutureEither.{right, left}
+    def flatten: FutureEither[T] = self.flatMap {
+      case Some(t) ⇒ right(t)
+      case None    ⇒ left(ItemNotFound(None))
+    }
+  }
+}
+
+import FutureEitherSyntax._
+
+private[path] abstract class FutureEitherFunctions {
+  import ExecutionContext.Implicits.global // TODO: make this controllable by the client
+
   private def toEitherTry[T](t: ⇒ T): Either[Reason, T] = tryToEither(Try(t))
 
   implicit private def eitherToFuture[T](e: EitherOrReason[T]): FutureEither[T] =
     Future.successful[EitherOrReason[T]](e)
 
-  def optionToEitherReason[T](
+  private def optionToEitherReason[T](
     o: Option[T],
     reason: ⇒ Reason = ItemNotFound(None)
   ): Either[Reason, T] =
@@ -104,7 +148,7 @@ object FutureEither extends FutureEitherSyntax {
 
   private def eitherToEitherOrReason[L, T](either: Either[L, T]): EitherOrReason[T] = either.left.map(RegularReason(_))
 
-  private def eitherReasonToTry[T](e: EitherOrReason[T]): Try[T] = {
+  private[path] def eitherReasonToTry[T](e: EitherOrReason[T]): Try[T] = {
     def itemNotFound(reason: Option[String]): Failure[T] = Failure[T] {
       reason match {
         case Some(message) ⇒ new NoSuchElementException(message)
@@ -128,39 +172,4 @@ object FutureEither extends FutureEitherSyntax {
   private def tryToEither[T](t: Try[T]): EitherOrReason[T] =
     t.transform(s ⇒ Success(Right(s)), f ⇒ Success(Left(ExceptionReason(f)))).get
 
-  implicit class FutureEitherOps[T](val self: FutureEither[T]) extends AnyVal {
-    def toTry: Future[Try[T]] = self.toEither.map(eitherReasonToTry)
-    def toFuture: Future[T] = self.toTry.map(_.get)
-
-    def recoverLeft(
-      pf: PartialFunction[Reason, T]
-    ): FutureEither[T] = self.toEither.map {
-      case Left(reason) if pf.isDefinedAt(reason) ⇒ Right[Reason, T](pf(reason))
-      case other                                  ⇒ other
-    }
-
-    def recoverLeftWith(
-      pf: PartialFunction[Reason, FutureEither[T]]
-    ): FutureEither[T] = ofFuture(self.toEither).flatMap {
-      case Left(reason) if pf.isDefinedAt(reason) ⇒ pf(reason)
-      case other                                  ⇒ Future.successful(other)
-    }
-
-    def ensureF(onLeft: T ⇒ Reason)(f: T ⇒ Boolean): FutureEither[T] =
-      self.flatMap { t: T ⇒
-        if (f(t)) right(t) else left(onLeft(t))
-      }
-
-    def withFilter(p: T ⇒ Boolean): FutureEither[T] = self.filter(p)
-  }
-
-  implicit class FutureEitherOptionOps[T](val self: FutureEither[Option[T]]) extends AnyVal {
-    def flatten: FutureEither[T] = self.flatMap {
-      case Some(t) ⇒ right(t)
-      case None    ⇒ left(ItemNotFound(None))
-    }
-  }
 }
-
-/** Convenient syntax mixin to avoid the need to import cats.syntax._ */
-trait FutureEitherSyntax extends TraverseSyntax with MonadFilterSyntax
