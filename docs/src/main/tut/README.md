@@ -16,7 +16,7 @@ is the successful result `T` and the `Left` side is a `Reason` explaining why th
 
 To use `FutureEither`, it's recommended to use the wildcard import,
 
-```scala
+```tut:silent
 import com.iheart.happy.path._
 import com.iheart.happy.path.FutureEither._
 import concurrent.{Future, duration}, duration._
@@ -26,7 +26,7 @@ This provides all the instances needed for things such as `map`/`flatMap`
 (otherwise you might see various `could not find implicit value` compilation errors).
 
 Once imported, you can use various helpers:
-```scala
+```tut:silent
 import scala.util.Success
 
 // The expressions below each yield a `FutureEither[Int]` containing a `Right(1)`
@@ -44,19 +44,16 @@ val f123 = for {
 } yield v1 + v2 + v3
 ```
 
-```scala
-scala> import concurrent.Await //only to show result, don't use Await in real code
-import concurrent.Await
-
-scala> Await.result(f123.toEither, 10.seconds)
-res4: Either[com.iheart.happy.path.Reason,Int] = Right(3)
+```tut
+import concurrent.Await //only to show result, don't use Await in real code
+Await.result(f123.toEither, 10.seconds)
 ```
 
 `f123` is a `FutureEither[Int]` containing the results of `f1`, `f2`, `f3` added together (3).
 
 Now let's say somewhere we encounter a failure:
 
-```scala
+```tut:silent
 
 val failedF: FutureEither[Int] = left(RegularReason("Something happened"))
 
@@ -67,9 +64,8 @@ val f45 = for {
 } yield v4 + v5
 ```
 
-```scala
-scala> Await.result(f45.toEither, 10.seconds) //again don't do Await in real code
-res7: Either[com.iheart.happy.path.Reason,Int] = Left(com.iheart.happy.path.RegularReason)
+```tut
+Await.result(f45.toEither, 10.seconds) //again don't do Await in real code
 ```
 
 The result of `f45` is a failed `FutureEither[Int]` containing a `Left[RegularReason[String]]`.
@@ -85,7 +81,7 @@ client, or matched to figure out how to recover from it. Poweramp defines the fo
 ### `ExceptionReason`
 When the underlying `Future` fails because of an exception:
 
-```scala
+```tut:silent
 val failedF = Future.failed(new RuntimeException("Something happened"))
 val failedFE = ofFuture(failedF)
 ```
@@ -103,7 +99,7 @@ we use `OptionalItemNotFound` to propagate the error as a 404.
 Otherwise, if it's an internal error (some essential resource that we expect to exist,
 but doesn't), we use `ItemNotFound`, which will propagate as a 500 error.
 
-```scala
+```tut:silent
 val opt: Option[Int] = None
 val optFE1 = ofOptional(opt)
 val optFE2 = ofOption(opt)
