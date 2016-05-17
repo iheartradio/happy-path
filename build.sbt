@@ -34,3 +34,4 @@ lazy val docs = project.in(file("docs"))
 
 
 addCommandAlias("validate", ";project all;clean;compile;test;tut")
+

@@ -13,8 +13,10 @@ cache:
   - $HOME/.sbt/boot/
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION -jvm-opts .jvmopts clean coverage validate
+  - sbt ++$TRAVIS_SCALA_VERSION -jvm-opts .jvmopts clean coverage test tut
 
 
 after_success:
-  - sbt coverageReport coverageAggregate codacyCoverage
+  - sbt coverageReport
+  - sbt coverageAggregate
+  - sbt codacyCoverage
