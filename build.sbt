@@ -24,11 +24,13 @@ lazy val tests = project.in(file("tests"))
 
 lazy val docs = project.in(file("docs"))
   .dependsOn(core)
-  .settings(compile <<= (compile in Compile).dependsOn(tut))
-  .settings(test <<= (test in Test).dependsOn(tut))
   .settings(moduleName := "happy-path-docs")
   .settings(Dependencies.settings:_*)
   .settings(tutSettings)
   .settings(tutScalacOptions ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))))
   .settings(tutTargetDirectory := file("."))
   .settings(Common.noPublishing: _*)
+
+
+
+addCommandAlias("validate", ";project all;clean;compile;test;tut")
