@@ -335,12 +335,12 @@ class FutureEitherSpec extends Specification with ExecutionEnvironment with Disc
   }
 
   "satisfies cats.laws.MonadFilterLaws" >> {
-    import algebra.Eq
+    import cats.kernel.Eq
     import cats.Monad
     import cats.laws.discipline.CartesianTests.Isomorphisms
     import cats.laws.discipline.MonadFilterTests
     import org.scalacheck.{Arbitrary, Gen}
-    import cats.std.all._
+    import cats.instances.all._
 
     implicit val timeout: Duration = 1.second
 

@@ -6,7 +6,7 @@ object Dependencies {
     val specs2 = "3.6.2"
   }
 
-  val cats = Seq("org.typelevel" %% "cats" % "0.5.0")
+  val cats = Seq("org.typelevel" %% "cats" % "0.7.2")
 
   val test = Seq(
     "org.specs2" %% "specs2-core" % Versions.specs2 % "test",

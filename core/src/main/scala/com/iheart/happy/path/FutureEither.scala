@@ -16,10 +16,10 @@ trait FutureEitherSyntax extends TraverseSyntax with MonadFilterSyntax {
   import ExecutionContext.Implicits.global // TODO: make this controllable by the client
 
   // futureMonad to allow `for` comprehensions on FutureEither by importing FutureEither._
-  implicit val futureMonad: Monad[Future] = cats.std.future.futureInstance
+  implicit val futureMonad: Monad[Future] = cats.instances.future.catsStdInstancesForFuture
 
   // listTraverse to allow `.sequenceU` on List[FutureEither[T]] by importing FutureEither._
-  implicit val listTraverse: Traverse[List] = cats.std.list.listInstance
+  implicit val listTraverse: Traverse[List] = cats.instances.list.catsStdInstancesForList
 
   /**
    * monadFilter to allow pattern matching and guards in `for` comprehensions
@@ -29,6 +29,9 @@ trait FutureEitherSyntax extends TraverseSyntax with MonadFilterSyntax {
     def flatMap[A, B](fa: FutureEither[A])(f: A ⇒ FutureEither[B]): FutureEither[B] = fa.flatMap(f)
     def pure[A](x: A): FutureEither[A] = FutureEither.right(x)
     def empty[A]: FutureEither[A] = FutureEither.left(reasonMonoid.empty)
+
+    def tailRecM[A, B](a: A)(f: (A) ⇒ FutureEither[Either[A, B]]): FutureEither[B] =
+      XorT.catsDataMonadErrorForXorT[Future, Reason].tailRecM(a)(f)
   }
 
   implicit val reasonMonoid: Monoid[Reason] = new Monoid[Reason] {
@@ -60,7 +63,7 @@ trait FutureEitherSyntax extends TraverseSyntax with MonadFilterSyntax {
         if (f(t)) right(t) else left(onLeft(t))
       }
 
-    def withFilter(p: T ⇒ Boolean): FutureEither[T] = self.filter(p)
+    def withFilter(p: T ⇒ Boolean): FutureEither[T] = monadFilter.filter(self)(p)
   }
 
   implicit class FutureEitherOptionOps[T](val self: FutureEither[Option[T]]) {
