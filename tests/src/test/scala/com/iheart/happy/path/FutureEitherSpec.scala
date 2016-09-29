@@ -321,6 +321,12 @@ class FutureEitherSpec extends Specification with ExecutionEnvironment with Disc
         }
       }
     }
+
+    "unit" >> {
+      "should be a Right of Unit" >> {
+        FutureEither.unit.toEither must beRight(()).awaitFor(defaultTimeout)
+      }
+    }
   }
 
   "can do for comprehension of FutureEithers without extra import" >> {

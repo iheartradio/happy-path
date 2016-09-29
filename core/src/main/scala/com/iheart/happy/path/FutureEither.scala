@@ -149,6 +149,8 @@ private[path] abstract class FutureEitherFunctions {
 
   def right[T](t: T): FutureEither[T] = XorT.pure(t)
 
+  lazy val unit: FutureEither[Unit] = FutureEither.right(())
+
   private def eitherToEitherOrReason[L, T](either: Either[L, T]): EitherOrReason[T] = either.left.map(RegularReason(_))
 
   private[path] def eitherReasonToTry[T](e: EitherOrReason[T]): Try[T] = {
