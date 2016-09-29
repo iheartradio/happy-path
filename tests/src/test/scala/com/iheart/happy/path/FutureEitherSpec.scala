@@ -327,6 +327,17 @@ class FutureEitherSpec extends Specification with ExecutionEnvironment with Disc
         FutureEither.unit.toEither must beRight(()).awaitFor(defaultTimeout)
       }
     }
+
+    "void" >> {
+      "should convert Right result to Unit" >> {
+        FutureEither.right("Hello").void.toEither must beRight(()).awaitFor(defaultTimeout)
+      }
+
+      "should not do anything to Left result" >> {
+        val reason: Reason = RegularReason("Oh no")
+        FutureEither.left(reason).void.toEither must beLeft(reason).awaitFor(defaultTimeout)
+      }
+    }
   }
 
   "can do for comprehension of FutureEithers without extra import" >> {

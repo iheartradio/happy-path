@@ -43,6 +43,7 @@ trait FutureEitherSyntax extends TraverseSyntax with MonadFilterSyntax {
     import FutureEither._
     def toTry: Future[Try[T]] = self.toEither.map(eitherReasonToTry)
     def toFuture: Future[T] = self.toTry.map(_.get)
+    def void: FutureEither[Unit] = self.map(_ ⇒ ())
 
     def recoverLeft(
       pf: PartialFunction[Reason, T]
