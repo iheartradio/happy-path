@@ -18,7 +18,8 @@ object Dependencies {
     resolvers ++= Seq(
       Resolver.sonatypeRepo("releases"),
       Resolver.sonatypeRepo("snapshots"),
-      Resolver.bintrayRepo("scalaz", "releases")
+      Resolver.bintrayRepo("scalaz", "releases"),
+      Resolver.jcenterRepo
     ),
     libraryDependencies ++= cats,
 

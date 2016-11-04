@@ -1,3 +1,12 @@
+import sbtrelease.Version
+
+lazy val mimaSettings = Seq(
+  mimaPreviousArtifacts := (if (scalaBinaryVersion.value != "2.10") {
+    Version(version.value).map {
+      case Version(major, Some(minor), Some(bugfix), _) =>
+        Set(organization.value %% moduleName.value % Seq(major, minor, bugfix - 1).mkString("."))
+    }.getOrElse(Set.empty)
+  } else Set.empty))
 
 lazy val all = project.in(file("."))
   .settings(moduleName := "happy-path-all")
@@ -8,6 +17,7 @@ lazy val all = project.in(file("."))
 lazy val core = project.in(file("core"))
   .settings(moduleName := "happy-path")
   .settings(Common.settings:_*)
+  .settings(mimaSettings:_*)
   .settings(Dependencies.settings:_*)
   .settings(Publish.settings:_*)
   .settings(Format.settings:_*)
@@ -33,5 +43,5 @@ lazy val docs = project.in(file("docs"))
 
 
 
-addCommandAlias("validate", ";project all;clean;compile;test;tut")
+addCommandAlias("validate", ";project all;clean;compile;mimaReportBinaryIssues;test;tut")
 

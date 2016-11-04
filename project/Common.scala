@@ -1,5 +1,6 @@
 import sbt.Keys._
 import sbt._
+import sbtrelease.Version
 
 object Common {
   val noPublishing = Seq(publish := (), publishLocal := (), publishArtifact := false)

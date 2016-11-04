@@ -12,3 +12,5 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.3.5")
 addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "1.3.0")
 
 addSbtPlugin("org.tpolecat" % "tut-plugin" % "0.4.1")
+
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.9")

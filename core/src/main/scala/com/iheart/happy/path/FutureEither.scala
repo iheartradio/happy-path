@@ -112,10 +112,10 @@ private[path] abstract class FutureEitherFunctions {
   ): FutureEither[T] =
     optionToEitherReason[T](o, reason)
 
-  @deprecated("This one generates a RegularReason on the left side. Use the `ofEither[L, T](either: Either[L, T], ifLeft: L => Reason)` instead. ", "0.7.4")
+  @deprecated("This one generates a RegularReason on the left side. Use the `ofEither[L, T](either: Either[L, T], leftMap: L => Reason)` instead. ", "0.7.4")
   def ofEither[L, T](either: Either[L, T]): FutureEither[T] = eitherToEitherOrReason(either)
 
-  def ofEither[L, T](either: Either[L, T], ifLeft: L ⇒ Reason): FutureEither[T] = eitherToReason(either, ifLeft)
+  def ofEither[L, T](either: Either[L, T], leftMap: L ⇒ Reason): FutureEither[T] = eitherToReason(either, leftMap)
 
   implicit def apply[T](fe: Future[Either[Reason, T]]): FutureEither[T] = XorT {
     fe.map(Xor.fromEither).recover {
@@ -147,9 +147,9 @@ private[path] abstract class FutureEitherFunctions {
 
   def ofFutureTry[T](f: Future[Try[T]]): FutureEither[T] = f.map(tryToEither)
 
-  def ofFutureEither[L, T](f: Future[Either[L, T]], left: L ⇒ Reason): FutureEither[T] = f.map(eitherToReason(_, left))
+  def ofFutureEither[L, T](f: Future[Either[L, T]], leftMap: L ⇒ Reason): FutureEither[T] = f.map(eitherToReason(_, leftMap))
 
-  @deprecated("This one generates a RegularReason on the left side. Use the `ofFutureEither[L, T](f: Future[Either[L, T]], ifLeft: L => Reason)` instead. ", "0.7.4")
+  @deprecated("This one generates a RegularReason on the left side. Use the `ofFutureEither[L, T](f: Future[Either[L, T]], leftMap: L => Reason)` instead. ", "0.7.4")
   def ofFutureEither[L, T](f: Future[Either[L, T]]): FutureEither[T] = f.map(eitherToEitherOrReason)
 
   // `XorT.right` and `XorT.left` accept an `F[T]`. These two helpers accept a T, similar to `XorT.pure`
@@ -162,7 +162,7 @@ private[path] abstract class FutureEitherFunctions {
 
   private def eitherToEitherOrReason[L, T](either: Either[L, T]): EitherOrReason[T] = eitherToReason(either, (l: L) ⇒ RegularReason(l))
 
-  private def eitherToReason[L, T](either: Either[L, T], ifLeft: L ⇒ Reason): EitherOrReason[T] = either.left.map(ifLeft)
+  private def eitherToReason[L, T](either: Either[L, T], leftMap: L ⇒ Reason): EitherOrReason[T] = either.left.map(leftMap)
 
   private[path] def eitherReasonToTry[T](e: EitherOrReason[T]): Try[T] = {
     def itemNotFound(reason: Option[String]): Failure[T] = Failure[T] {
