@@ -107,6 +107,19 @@ class FutureEitherSpec extends Specification with ExecutionEnvironment with Disc
       }
     }
 
+    "ofValidated" >> {
+      import cats.data.Validated, Validated._
+      "Valid" >> {
+        ofValidated(Valid(123)).toEither must beRight(123).awaitFor(defaultTimeout)
+      }
+
+      "Invalid" >> {
+        val result = ofValidated(invalidNel[String, Int]("Blah"))
+        val expectedReason = ValidationReason(Seq("Blah"))
+        result.toEither.map(_.left.get) must be_==(expectedReason).awaitFor(defaultTimeout)
+      }
+    }
+
     "ofFutureOption" >> {
       "Future of Some" >> {
         ofFutureOption(Future.successful(Some(123))).toEither must beRight(123).awaitFor(defaultTimeout)
